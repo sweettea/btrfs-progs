@@ -143,6 +143,16 @@ static const struct btrfs_feature mkfs_features[] = {
 		.desc		= "new extent tree format"
 	},
 #endif
+	{
+		.name		= "encrypt",
+		.flag		= BTRFS_FEATURE_INCOMPAT_FSCRYPT,
+		.sysfs_name	= "fscrypt",
+		VERSION_TO_STRING2(compat, 5,19),
+		VERSION_NULL(safe),
+		VERSION_NULL(default),
+		.desc		= "fs-level encryption"
+	},
+
 	/* Keep this one last */
 	{
 		.name = "list-all",
