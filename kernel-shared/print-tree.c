@@ -31,7 +31,7 @@
 static void print_dir_item_type(struct extent_buffer *eb,
                                 struct btrfs_dir_item *di)
 {
-	u8 type = btrfs_dir_type(eb, di);
+	u8 type = btrfs_dir_flags_to_ftype(btrfs_dir_flags(eb, di));
 	static const char* dir_item_str[] = {
 		[BTRFS_FT_REG_FILE]	= "FILE",
 		[BTRFS_FT_DIR] 		= "DIR",

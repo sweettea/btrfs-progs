@@ -815,8 +815,15 @@ static void maybe_free_inode_rec(struct cache_tree *inode_cache,
 	filetype = imode_to_type(rec->imode);
 	list_for_each_entry_safe(backref, tmp, &rec->backrefs, list) {
 		if (backref->found_dir_item && backref->found_dir_index) {
-			if (backref->filetype != filetype)
+			if (backref->filetype != filetype) {
 				backref->errors |= REF_ERR_FILETYPE_UNMATCH;
+				fprintf(stderr, "\tfiletype mismatch mf %llu index %llu"
+					" namelen %u name %s filetype %d intended %d",
+					(unsigned long long)backref->dir,
+					(unsigned long long)backref->index,
+					backref->namelen, backref->name,
+					backref->filetype, filetype);
+			}
 			if (!backref->errors && backref->found_inode_ref &&
 			    rec->nlink == rec->found_link) {
 				list_del(&backref->list);
@@ -976,8 +983,15 @@ static int add_inode_backref(struct cache_tree *inode_cache,
 			backref->errors |= REF_ERR_DUP_DIR_INDEX;
 		if (backref->found_inode_ref && backref->index != index)
 			backref->errors |= REF_ERR_INDEX_UNMATCH;
-		if (backref->found_dir_item && backref->filetype != filetype)
+		if (backref->found_dir_item && backref->filetype != filetype) {
 			backref->errors |= REF_ERR_FILETYPE_UNMATCH;
+			fprintf(stderr, "\tfiletype mismatch addinodeback %llu index %llu"
+				" namelen %u name %s filetype %d intended %d",
+				(unsigned long long)backref->dir,
+				(unsigned long long)backref->index,
+				backref->namelen, backref->name,
+				backref->filetype, filetype);
+		}
 
 		backref->index = index;
 		backref->filetype = filetype;
@@ -987,7 +1001,15 @@ static int add_inode_backref(struct cache_tree *inode_cache,
 		if (backref->found_dir_item)
 			backref->errors |= REF_ERR_DUP_DIR_ITEM;
 		if (backref->found_dir_index && backref->filetype != filetype)
-			backref->errors |= REF_ERR_FILETYPE_UNMATCH;
+			if (backref->filetype != filetype) {
+				backref->errors |= REF_ERR_FILETYPE_UNMATCH;
+				fprintf(stderr, "\tfiletype mismatch di %llu index %llu"
+					" namelen %u name %s filetype %d intended %d",
+					(unsigned long long)backref->dir,
+					(unsigned long long)backref->index,
+					backref->namelen, backref->name,
+					backref->filetype, filetype);
+			}
 
 		backref->filetype = filetype;
 		backref->found_dir_item = 1;
@@ -1416,7 +1438,7 @@ static int process_dir_item(struct extent_buffer *eb,
 		btrfs_dir_item_key_to_cpu(eb, di, &location);
 		name_len = btrfs_dir_name_len(eb, di);
 		data_len = btrfs_dir_data_len(eb, di);
-		filetype = btrfs_dir_type(eb, di);
+		filetype = btrfs_dir_flags_to_ftype(btrfs_dir_flags(eb, di));
 
 		rec->found_size += name_len;
 		if (cur + sizeof(*di) + name_len > total ||
@@ -2073,7 +2095,7 @@ static int add_missing_dir_index(struct btrfs_root *root,
 	disk_key.offset = 0;
 
 	btrfs_set_dir_item_key(leaf, dir_item, &disk_key);
-	btrfs_set_dir_type(leaf, dir_item, imode_to_type(rec->imode));
+	btrfs_set_dir_flags(leaf, dir_item, imode_to_type(rec->imode));
 	btrfs_set_dir_data_len(leaf, dir_item, 0);
 	btrfs_set_dir_name_len(leaf, dir_item, backref->namelen);
 	name_ptr = (unsigned long)(dir_item + 1);

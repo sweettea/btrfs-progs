@@ -541,6 +541,7 @@ int btrfs_mkdir(struct btrfs_trans_handle *trans, struct btrfs_root *root,
 
 	if (dir_item) {
 		struct btrfs_key found_key;
+		u8 type;
 
 		/*
 		 * Already have conflicting name, check if it is a dir.
@@ -548,7 +549,8 @@ int btrfs_mkdir(struct btrfs_trans_handle *trans, struct btrfs_root *root,
 		 */
 		btrfs_dir_item_key_to_cpu(path->nodes[0], dir_item, &found_key);
 		ret_ino = found_key.objectid;
-		if (btrfs_dir_type(path->nodes[0], dir_item) != BTRFS_FT_DIR)
+		type = btrfs_dir_flags_to_ftype(btrfs_dir_flags(path->nodes[0], dir_item));
+		if (type != BTRFS_FT_DIR)
 			ret = -EEXIST;
 		goto out;
 	}

@@ -147,7 +147,7 @@ static const struct btrfs_feature mkfs_features[] = {
 		.name		= "encrypt",
 		.flag		= BTRFS_FEATURE_INCOMPAT_FSCRYPT,
 		.sysfs_name	= "fscrypt",
-		VERSION_TO_STRING2(compat, 5,19),
+		VERSION_TO_STRING2(compat, 5,14), // 19
 		VERSION_NULL(safe),
 		VERSION_NULL(default),
 		.desc		= "fs-level encryption"
